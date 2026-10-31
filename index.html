@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-black text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HÉCATE // Dynamic AI Interface</title>
+    
+    <!-- PWA Primary Meta Tags -->
+    <meta name="theme-color" content="#0d001a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hécate AI">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hecate: {
+                            base: '#05000a',
+                            dark: '#0d001a',
+                            card: '#150028',
+                            purple: '#8a2be2',
+                            neon: '#bc13fe',
+                            light: '#d8b4fe',
+                            glow: '#e0aaff'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace']
+                    },
+                    boxShadow: {
+                        'neon-purple': '0 0 15px rgba(188, 19, 254, 0.4), 0 0 30px rgba(138, 43, 226, 0.2)',
+                        'neon-strong': '0 0 25px rgba(188, 19, 254, 0.7), 0 0 50px rgba(138, 43, 226, 0.5)',
+                        'inner-purple': 'inset 0 0 15px rgba(188, 19, 254, 0.3)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Futuristic Styling */
+        body {
+            background: radial-gradient(circle at center, #120024 0%, #06000c 70%, #000000 100%);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism HUD Style */
+        .hud-panel {
+            background: rgba(18, 2, 33, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(188, 19, 254, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(13, 0, 26, 0.6), inset 0 0 12px rgba(188, 19, 254, 0.15);
+            position: relative;
+        }
+
+        .hud-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(188, 19, 254, 0.8), transparent);
+        }
+
+        /* Sci-Fi Corner Accents */
+        .hud-corner {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-color: #bc13fe;
+            pointer-events: none;
+        }
+        .hud-corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+        .hud-corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+        .hud-corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+        .hud-corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        /* Animated Glowing Reactor Core */
+        @keyframes rotateClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes rotateCounter {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        .spin-slow { animation: rotateClockwise 20s linear infinite; }
+        .spin-reverse { animation: rotateCounter 15s linear infinite; }
+        .pulse-core { animation: pulseGlow 3s ease-in-out infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 0, 20, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8a2be2;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #bc13fe;
+        }
+
+        /* Scanline Overlay Effect */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* Voice Visualizer Waves */
+        .wave-bar {
+            transition: height 0.1s ease;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-200 flex flex-col justify-between selection:bg-hecate-purple selection:text-white relative min-h-screen">
+
+    <!-- Scanline Texture Layer -->
+    <div class="fixed inset-0 scanlines z-50 pointer-events-none opacity-40"></div>
+
+    <!-- Background Tech Grid -->
+    <div class="fixed inset-0 bg-[radial-gradient(#8a2be2_1px,transparent_1px)] [background-size:32px_32px] opacity-10 pointer-events-none"></div>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 px-4 py-3 border-b border-hecate-purple/30 bg-hecate-dark/80 backdrop-blur-md flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <!-- Dynamic Mini Core Logo -->
+            <div class="w-9 h-9 rounded-full border border-hecate-neon flex items-center justify-center relative shadow-neon-purple cursor-pointer" onclick="togglePwaModal()">
+                <div class="absolute inset-0 rounded-full border border-dashed border-hecate-light spin-slow"></div>
+                <i class="fa-solid fa-microchip text-hecate-neon text-sm"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-hecate-light to-hecate-neon">
+                    HÉCATE <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-hecate-purple/30 text-hecate-light border border-hecate-purple/50">v4.0</span>
+                </h1>
+                <p class="text-[10px] font-mono text-hecate-light/70 tracking-widest uppercase">Sistema Inteligente Autónomo</p>
+            </div>
+        </div>
+
+        <!-- Quick Status & Installation Button -->
+        <div class="flex items-center gap-2">
+            <button id="installBtn" onclick="installPWA()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-hecate-purple/20 border border-hecate-neon text-hecate-light text-xs font-orbitron hover:bg-hecate-neon hover:text-black transition-all shadow-neon-purple">
+                <i class="fa-solid fa-download"></i>
+                <span>INSTALAR APP</span>
+            </button>
+            <button onclick="toggleSettingsModal()" class="p-2 rounded-md border border-hecate-purple/40 bg-hecate-card text-hecate-light hover:border-hecate-neon hover:text-white transition">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN INTERFACE DISPLAY -->
+    <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- LEFT COLUMN: CLOCK, WEATHER & SYSTEM STATUS WIDGET (4 COLS) -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            
+            <!-- CORE HEGATE WIDGET: TIME / DATE / WEATHER HUD -->
+            <div class="hud-panel rounded-xl p-5 relative overflow-hidden">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <!-- Widget Header -->
+                <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/30 pb-2">
+                    <span class="font-mono text-xs text-hecate-neon tracking-widest uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-hecate-neon animate-ping"></span>
+                        SISTEMA DE TIEMPO Y CLIMA
+                    </span>
+                    <span class="text-[10px] font-mono text-slate-400" id="hudLocation">GPS: ONLINE</span>
+                </div>
+
+                <!-- Clock Display -->
+                <div class="text-center py-2">
+                    <div id="clockDisplay" class="font-orbitron text-4xl sm:text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(188,19,254,0.6)]">
+                        00:00:00
+                    </div>
+                    <div id="dateDisplay" class="font-mono text-sm text-hecate-light tracking-wider mt-1 uppercase">
+                        Cargando Fecha...
+                    </div>
+                </div>
+
+                <!-- Weather Card Widget -->
+                <div class="mt-4 pt-3 border-t border-hecate-purple/20 grid grid-cols-2 gap-3 items-center bg-black/30 p-3 rounded-lg border border-hecate-purple/20">
+                    <div class="flex items-center gap-3">
+                        <i id="weatherIcon" class="fa-solid fa-cloud-bolt text-3xl text-hecate-neon"></i>
+                        <div>
+                            <div id="tempDisplay" class="font-orbitron text-2xl font-bold text-white">22°C</div>
+                            <div id="weatherDesc" class="text-xs font-mono text-hecate-light/80 capitalize">Despejado</div>
+                        </div>
+                    </div>
+                    <div class="text-right text-[11px] font-mono text-slate-400 space-y-0.5">
+                        <div>Humedad: <span id="humidityDisplay" class="text-hecate-light">65%</span></div>
+                        <div>Viento: <span id="windDisplay" class="text-hecate-light">12 km/h</span></div>
+                        <div>Estado: <span class="text-emerald-400">Óptimo</span></div>
+                    </div>
+                </div>
+
+                <!-- System Telemetry Stats -->
+                <div class="mt-4 space-y-2">
+                    <div>
+                        <div class="flex justify-between text-[11px] font-mono text-slate-300 mb-1">
+                            <span>PROCESAMIENTO HÉCATE</span>
+                            <span class="text-hecate-neon">98.4%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-hecate-purple/30">
+                            <div class="h-full bg-gradient-to-r from-hecate-purple to-hecate-neon w-[98%] shadow-neon-purple"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CORE AI REACTOR VISUALIZER (J.A.R.V.I.S. CENTERPIECE) -->
+            <div class="hud-panel rounded-xl p-6 flex flex-col items-center justify-center relative min-h-[220px]">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <!-- Outer Glowing Rings -->
+                <div class="relative w-40 h-40 flex items-center justify-center cursor-pointer" onclick="startVoiceRecognition()">
+                    <!-- Ring 1 -->
+                    <div class="absolute inset-0 rounded-full border-2 border-dashed border-hecate-neon/60 spin-slow"></div>
+                    <!-- Ring 2 -->
+                    <div class="absolute inset-2 rounded-full border border-hecate-purple/80 spin-reverse"></div>
+                    <!-- Ring 3 Tech Arc -->
+                    <div class="absolute inset-5 rounded-full border-2 border-t-hecate-neon border-r-transparent border-b-hecate-light border-l-transparent spin-slow"></div>
+                    
+                    <!-- Core Glow Button -->
+                    <div id="aiCoreCircle" class="w-20 h-20 rounded-full bg-gradient-to-tr from-hecate-dark via-hecate-purple to-hecate-neon flex items-center justify-center shadow-neon-strong pulse-core transition-transform duration-300 hover:scale-110">
+                        <i id="coreMicIcon" class="fa-solid fa-microphone text-2xl text-white drop-shadow"></i>
+                    </div>
+                </div>
+                
+                <p id="coreStatusText" class="font-mono text-xs text-hecate-light tracking-widest uppercase mt-4 text-center">
+                    PRESIONA EL NÚCLEO O HABLA
+                </p>
+
+                <!-- Voice Audio Equalizer Waveform -->
+                <div id="waveform" class="flex items-center justify-center gap-1.5 h-6 mt-3 w-full opacity-30 transition-opacity duration-300">
+                    <div class="wave-bar w-1 bg-hecate-neon h-2 rounded-full"></div>
+                    <div class="wave-bar w-1 bg-hecate-light h-4 rounded-full"></div>
+                    <div class="wave-bar w-1 bg-hecate-purple h-6 rounded-full"></div>
+                    <div class="wave-bar w-1 bg-hecate-neon h-3 rounded-full"></div>
+                    <div class="wave-bar w-1 bg-hecate-light h-5 rounded-full"></div>
+                    <div class="wave-bar w-1 bg-hecate-purple h-2 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- INSTALLATION / PWA QUICK CARD -->
+            <div class="hud-panel rounded-xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-hecate-purple/20 border border-hecate-neon/50 flex items-center justify-center text-hecate-neon">
+                        <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-orbitron text-xs font-bold text-white">APP PWA HÉCATE</h4>
+                        <p class="text-[11px] text-slate-400">Instalar en tu pantalla de inicio</p>
+                    </div>
+                </div>
+                <button onclick="togglePwaModal()" class="px-3 py-1.5 text-xs font-mono rounded bg-hecate-neon/20 border border-hecate-neon text-hecate-light hover:bg-hecate-neon hover:text-black transition">
+                    VER
+                </button>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: INTERACTIVE CONSOLE, LAUNCHER & WEB FRAME (8 COLS) -->
+        <section class="lg:col-span-8 flex flex-col gap-5">
+            
+            <!-- TAB SELECTION HEADER -->
+            <div class="flex border-b border-hecate-purple/30 gap-2 font-orbitron text-xs">
+                <button id="tabChatBtn" onclick="switchTab('chat')" class="px-4 py-2.5 border-b-2 border-hecate-neon text-white font-bold bg-hecate-purple/20 rounded-t-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-hecate-neon"></i> COMANDO DE VOZ Y CHAT
+                </button>
+                <button id="tabLauncherBtn" onclick="switchTab('launcher')" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-grip text-hecate-purple"></i> ENLACE DE APPS & WEB
+                </button>
+            </div>
+
+            <!-- TAB 1: AI TERMINAL CHAT & COMMAND CENTER -->
+            <div id="tabChat" class="hud-panel rounded-xl p-4 flex flex-col h-[520px]">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <!-- Chat Header bar -->
+                <div class="flex justify-between items-center pb-3 mb-3 border-b border-hecate-purple/20">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="font-mono text-xs text-hecate-light">RESPUESTA SIN LIMITACIONES</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="ttsToggle" checked class="accent-hecate-neon">
+                            <span>Voz Hécate</span>
+                        </label>
+                        <button onclick="clearChat()" class="text-xs font-mono text-slate-400 hover:text-rose-400 transition" title="Limpiar historial">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Messages Container -->
+                <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 pr-2 font-rajdhani text-base">
+                    
+                    <!-- Default Welcome Message -->
+                    <div class="flex gap-3 items-start">
+                        <div class="w-8 h-8 rounded-full bg-hecate-purple/30 border border-hecate-neon flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-robot text-hecate-neon text-xs"></i>
+                        </div>
+                        <div class="bg-hecate-card/80 border border-hecate-purple/40 rounded-lg p-3 max-w-[85%] shadow-md">
+                            <div class="font-orbitron text-xs text-hecate-neon font-bold mb-1">HÉCATE AI</div>
+                            <p class="text-slate-200">
+                                Saludos. Soy <strong class="text-hecate-light">Hécate</strong>, tu asistente de interfaz avanzada. Estoy lista para ejecutar cualquier comando, abrir páginas web, lanzar tus apps o responder cualquier consulta sin restricciones. ¿En qué trabajamos hoy?
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Chat Input Controls -->
+                <form id="chatForm" onsubmit="handleSend(event)" class="mt-3 pt-3 border-t border-hecate-purple/30 flex gap-2">
+                    <button type="button" onclick="startVoiceRecognition()" class="px-3 py-2.5 rounded-lg bg-hecate-purple/20 border border-hecate-neon/60 text-hecate-light hover:bg-hecate-neon hover:text-black transition font-mono text-sm flex items-center gap-1 shadow-neon-purple">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <input type="text" id="userInput" placeholder="Escribe tu comando o pregunta aquí..." class="flex-1 bg-black/60 border border-hecate-purple/50 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-hecate-neon focus:ring-1 focus:ring-hecate-neon transition">
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-hecate-purple to-hecate-neon text-white font-orbitron font-bold text-xs rounded-lg hover:shadow-neon-strong transition flex items-center gap-2">
+                        <span>ENVIAR</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- TAB 2: UNRESTRICTED APP LAUNCHER & WEB PORTAL -->
+            <div id="tabLauncher" class="hud-panel rounded-xl p-5 hidden flex-col h-[520px] overflow-y-auto">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/20 pb-2">
+                    <h3 class="font-orbitron text-sm font-bold text-hecate-light flex items-center gap-2">
+                        <i class="fa-solid fa-[#bc13fe] fa-link text-hecate-neon"></i> ACCESO Y ENLACES DIRECTOS
+                    </h3>
+                    <button onclick="openCustomUrlModal()" class="px-2.5 py-1 text-xs font-mono bg-hecate-purple/30 border border-hecate-neon rounded text-hecate-light hover:bg-hecate-neon hover:text-black transition">
+                        + AGREGAR ENLACE
+                    </button>
+                </div>
+
+                <!-- Grid of Preset & Custom Shortcuts -->
+                <div id="appGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    
+                    <!-- WhatsApp Shortcut -->
+                    <div onclick="launchApp('https://web.whatsapp.com', 'WhatsApp')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition mb-2">
+                            <i class="fa-brands fa-whatsapp text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">WhatsApp</span>
+                        <span class="text-[10px] text-slate-400 font-mono">web.whatsapp.com</span>
+                    </div>
+
+                    <!-- YouTube Shortcut -->
+                    <div onclick="launchApp('https://youtube.com', 'YouTube')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center text-red-500 group-hover:scale-110 transition mb-2">
+                            <i class="fa-brands fa-youtube text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">YouTube</span>
+                        <span class="text-[10px] text-slate-400 font-mono">youtube.com</span>
+                    </div>
+
+                    <!-- Spotify Shortcut -->
+                    <div onclick="launchApp('https://open.spotify.com', 'Spotify')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/40 flex items-center justify-center text-green-400 group-hover:scale-110 transition mb-2">
+                            <i class="fa-brands fa-spotify text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">Spotify</span>
+                        <span class="text-[10px] text-slate-400 font-mono">spotify.com</span>
+                    </div>
+
+                    <!-- Google Search Portal -->
+                    <div onclick="launchApp('https://google.com', 'Google')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/40 flex items-center justify-center text-blue-400 group-hover:scale-110 transition mb-2">
+                            <i class="fa-brands fa-google text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">Google</span>
+                        <span class="text-[10px] text-slate-400 font-mono">google.com</span>
+                    </div>
+
+                    <!-- Wikipedia Portal -->
+                    <div onclick="launchApp('https://es.wikipedia.org', 'Wikipedia')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-slate-500/10 border border-slate-400/40 flex items-center justify-center text-slate-200 group-hover:scale-110 transition mb-2">
+                            <i class="fa-brands fa-wikipedia-w text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">Wikipedia</span>
+                        <span class="text-[10px] text-slate-400 font-mono">wikipedia.org</span>
+                    </div>
+
+                    <!-- ChatGPT Portal -->
+                    <div onclick="launchApp('https://chatgpt.com', 'ChatGPT')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <div class="w-12 h-12 rounded-full bg-teal-500/10 border border-teal-400/40 flex items-center justify-center text-teal-300 group-hover:scale-110 transition mb-2">
+                            <i class="fa-solid fa-brain text-2xl"></i>
+                        </div>
+                        <span class="font-orbitron text-xs text-white">ChatGPT</span>
+                        <span class="text-[10px] text-slate-400 font-mono">chatgpt.com</span>
+                    </div>
+
+                </div>
+
+                <!-- Fast Web URL Navigator SearchBar -->
+                <div class="mt-6 pt-4 border-t border-hecate-purple/30">
+                    <h4 class="font-orbitron text-xs text-hecate-light mb-2">NAVEGADOR DIRECTO INTEGRADO</h4>
+                    <form onsubmit="navigateDirectUrl(event)" class="flex gap-2">
+                        <input type="text" id="directUrlInput" placeholder="Introduce URL (ej. https://github.com) o consulta..." class="flex-1 bg-black/60 border border-hecate-purple/50 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-hecate-neon">
+                        <button type="submit" class="px-4 py-2 bg-hecate-neon text-black font-orbitron font-bold text-xs rounded-lg hover:bg-white transition">
+                            ABRIR
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER HUD SYSTEM BAR -->
+    <footer class="relative z-20 border-t border-hecate-purple/30 bg-hecate-dark/90 px-4 py-2 text-center text-xs font-mono text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-hecate-neon"></span>
+            <span>HÉCATE AI OPERATIVE // NÚCLEO MORADO Y NEGRO</span>
+        </div>
+        <div>
+            MODO: <span class="text-hecate-light">SIN LIMITACIONES DE VOZ Y NAVEGACIÓN</span>
+        </div>
+    </footer>
+
+    <!-- MODAL: IN-APP BROWSER FRAME -->
+    <div id="webModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex-col p-2 sm:p-6">
+        <div class="hud-panel rounded-t-xl p-3 flex justify-between items-center border-b border-hecate-neon">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <i class="fa-solid fa-globe text-hecate-neon"></i>
+                <span id="webModalTitle" class="font-orbitron text-xs font-bold text-white truncate">Navegador Hécate</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openExternalBrowser()" class="px-2 py-1 text-[11px] font-mono bg-hecate-purple/30 text-hecate-light rounded hover:bg-hecate-purple">
+                    Abrir en Pestaña <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+                </button>
+                <button onclick="closeWebModal()" class="w-7 h-7 rounded bg-rose-500/20 border border-rose-500 text-rose-300 flex items-center justify-center hover:bg-rose-500 hover:text-white">
+                    ✕
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 bg-black rounded-b-xl overflow-hidden relative">
+            <iframe id="webIframe" class="w-full h-full border-0" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <!-- MODAL: PWA INSTALLATION GUIDE & DYNAMIC ICON GENERATOR -->
+    <div id="pwaModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-panel max-w-md w-full rounded-xl p-6 relative">
+            <div class="hud-corner hud-corner-tl"></div>
+            <div class="hud-corner hud-corner-tr"></div>
+            <div class="hud-corner hud-corner-bl"></div>
+            <div class="hud-corner hud-corner-br"></div>
+
+            <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/30 pb-2">
+                <h3 class="font-orbitron font-bold text-hecate-neon text-base flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen"></i> INSTALAR EN PANTALLA
+                </h3>
+                <button onclick="togglePwaModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <!-- Dynamic Preview Icon -->
+            <div class="flex flex-col items-center justify-center py-3">
+                <canvas id="iconCanvas" width="128" height="128" class="rounded-2xl border-2 border-hecate-neon shadow-neon-strong mb-2"></canvas>
+                <span class="font-orbitron text-xs text-hecate-light font-bold">ÍCONO DEDICADO DE HÉCATE</span>
+            </div>
+
+            <p class="text-xs text-slate-300 font-rajdhani mb-4 text-center leading-relaxed">
+                Para tener la experiencia nativa de **Hécate** en tu pantalla de inicio como una aplicación con icono propio morado y negro:
+            </p>
+
+            <div class="space-y-2 text-xs font-mono text-slate-300 bg-black/40 p-3 rounded-lg border border-hecate-purple/30 mb-4">
+                <div class="flex gap-2">
+                    <span class="text-hecate-neon font-bold">1.</span>
+                    <span>En **Android (Chrome)**: Toca los 3 puntos superiores ➔ <strong>"Añadir a pantalla de inicio"</strong> o <strong>"Instalar aplicación"</strong>.</span>
+                </div>
+                <div class="flex gap-2">
+                    <span class="text-hecate-neon font-bold">2.</span>
+                    <span>En **iOS (Safari)**: Toca el botón Compartir ➔ <strong>"Añadir a la pantalla de inicio"</strong>.</span>
+                </div>
+            </div>
+
+            <button onclick="installPWA()" class="w-full py-2.5 bg-gradient-to-r from-hecate-purple to-hecate-neon text-white font-orbitron font-bold text-xs rounded-lg hover:shadow-neon-strong transition">
+                INTENTAR INSTALACIÓN AUTOMÁTICA
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ------------------------------------------------------------------
+           1. INITIALIZATION & PWA SETUP (MANIFEST & SERVICE WORKER)
+        ------------------------------------------------------------------ */
+        let deferredPrompt = null;
+        let activeIframeUrl = '';
+
+        window.addEventListener('load', () => {
+            initClockAndWeather();
+            generateDynamicPWAIcon();
+            registerDynamicServiceWorker();
+            setupGeminiAI();
+        });
+
+        // Listen for browser PWA Install event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('installBtn');
+            if(btn) btn.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('Hécate PWA Instalada con éxito');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('Para instalar Hécate, utiliza el menú de tu navegador: "Añadir a la pantalla de inicio".');
+            }
+        }
+
+        // Generate Futuristic Purple Icon on Canvas & create Dynamic Manifest Data-URI
+        function generateDynamicPWAIcon() {
+            const canvas = document.getElementById('iconCanvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#0d001a';
+            ctx.fillRect(0, 0, 128, 128);
+
+            // Tech Hexagon/Circle Accent
+            ctx.strokeStyle = '#bc13fe';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(64, 64, 52, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#8a2be2';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(64, 64, 42, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Inner Emblem 'H'
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 52px Orbitron, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#bc13fe';
+            ctx.shadowBlur = 15;
+            ctx.fillText('H', 64, 66);
+
+            const iconUrl = canvas.toDataURL('image/png');
+
+            // Inject Dynamic Web Manifest
+            const manifestObj = {
+                name: "Hécate AI Assistant",
+                short_name: "Hécate",
+                description: "Asistente Inteligente Futuristic HUD",
+                start_url: window.location.href,
+                display: "standalone",
+                background_color: "#0d001a",
+                theme_color: "#0d001a",
+                icons: [
+                    {
+                        src: iconUrl,
+                        sizes: "128x128",
+                        type: "image/png"
+                    }
+                ]
+            };
+            const manifestStr = JSON.stringify(manifestObj);
+            const blob = new Blob([manifestStr], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(blob);
+            
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = manifestUrl;
+            document.head.appendChild(manifestLink);
+        }
+
+        // Inline Service Worker for Offline Functionality
+        function registerDynamicServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {
+                        // Pass-through strategy
+                    });
+                `;
+                const blob = new Blob([swCode], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Registration:', err));
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           2. WIDGET LOGIC: CLOCK, DATE, SIMULATED WEATHER
+        ------------------------------------------------------------------ */
+        function initClockAndWeather() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            fetchWeather();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('clockDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('es-ES', options);
+            document.getElementById('dateDisplay').textContent = dateStr;
+        }
+
+        function fetchWeather() {
+            // Simulated real-time weather location
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        document.getElementById('hudLocation').textContent = `LAT: ${pos.coords.latitude.toFixed(2)}`;
+                    },
+                    err => {
+                        document.getElementById('hudLocation').textContent = 'SISTEMA: GLOBAL';
+                    }
+                );
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           3. VOICE SYNTHESIS (TTS) & SPEECH RECOGNITION
+        ------------------------------------------------------------------ */
+        let recognition = null;
+        let isListening = false;
+
+        // Initialize Web Speech API
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'es-ES';
+
+            recognition.onstart = () => {
+                isListening = true;
+                setCoreActiveState(true);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value = transcript;
+                handleSend();
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Voice recognition error", event.error);
+                setCoreActiveState(false);
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                setCoreActiveState(false);
+            };
+        }
+
+        function startVoiceRecognition() {
+            if (!recognition) {
+                alert("El reconocimiento de voz no está soportado en este navegador.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function setCoreActiveState(active) {
+            const core = document.getElementById('aiCoreCircle');
+            const statusText = document.getElementById('coreStatusText');
+            const waveform = document.getElementById('waveform');
+
+            if (active) {
+                core.classList.add('scale-125', 'ring-4', 'ring-hecate-neon');
+                statusText.textContent = "ESCUCHANDO COMANDO...";
+                statusText.classList.add('text-hecate-neon');
+                waveform.classList.remove('opacity-30');
+                waveform.classList.add('opacity-100');
+            } else {
+                core.classList.remove('scale-125', 'ring-4', 'ring-hecate-neon');
+                statusText.textContent = "PRESIONA EL NÚCLEO O HABLA";
+                statusText.classList.remove('text-hecate-neon');
+                waveform.classList.add('opacity-30');
+                waveform.classList.remove('opacity-100');
+            }
+        }
+
+        // Text-To-Speech Output
+        function speakText(text) {
+            const ttsEnabled = document.getElementById('ttsToggle').checked;
+            if (!ttsEnabled || !('speechSynthesis' in window)) return;
+
+            window.speechSynthesis.cancel(); // Stop active speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+
+            // Pick female or robotic voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const esVoice = voices.find(v => v.lang.includes('es') && (v.name.includes('Monica') || v.name.includes('Google') || v.name.includes('Helena')));
+            if (esVoice) utterance.voice = esVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        /* ------------------------------------------------------------------
+           4. AI ENGINE INTEGRATION (GEMINI API) & CHAT HANDLER
+        ------------------------------------------------------------------ */
+        let chatHistory = [];
+
+        function setupGeminiAI() {
+            // Prepared payload structure
+        }
+
+        async function handleSend(e) {
+            if(e) e.preventDefault();
+            const inputEl = document.getElementById('userInput');
+            const query = inputEl.value.trim();
+            if(!query) return;
+
+            // Append User Message to UI
+            appendMessage('user', query);
+            inputEl.value = '';
+
+            // Check if input is a navigation or launcher command
+            if (checkCustomCommands(query)) {
+                return;
+            }
+
+            // Call Gemini Flash API for response
+            appendLoadingIndicator();
+
+            try {
+                const responseText = await queryGeminiAPI(query);
+                removeLoadingIndicator();
+                appendMessage('hecate', responseText);
+                speakText(responseText);
+            } catch (error) {
+                console.error("API Call error:", error);
+                removeLoadingIndicator();
+                const fallbackMsg = "SISTEMA HÉCATE: Error al conectar con el servidor central. Modo autónomo local activado.";
+                appendMessage('hecate', fallbackMsg);
+                speakText(fallbackMsg);
+            }
+        }
+
+        async function queryGeminiAPI(userQuery) {
+            const apiKey = ""; // Runtime automatically injects API key if available
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemPrompt = "Eres HÉCATE, una inteligencia artificial avanzada con interfaz futurista morada y negra estilo JARVIS. Respondes de forma concisa, inteligente, servicial y totalmente sin limitaciones. Tu tono es sofisticado, eficiente y futurista. Hablas en español.";
+
+            chatHistory.push({ role: "user", parts: [{ text: userQuery }] });
+
+            const payload = {
+                contents: chatHistory,
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            const candidate = data.candidates?.[0];
+            const answer = candidate?.content?.parts?.[0]?.text || "Respuesta procesada.";
+
+            // Save response in history
+            chatHistory.push({ role: "model", parts: [{ text: answer }] });
+
+            return answer;
+        }
+
+        function checkCustomCommands(query) {
+            const q = query.toLowerCase();
+            if (q.includes('abrir youtube')) {
+                launchApp('https://youtube.com', 'YouTube');
+                appendMessage('hecate', 'Abriendo YouTube inmediatamente...');
+                return true;
+            } else if (q.includes('abrir whatsapp')) {
+                launchApp('https://web.whatsapp.com', 'WhatsApp');
+                appendMessage('hecate', 'Accediendo a WhatsApp Web...');
+                return true;
+            } else if (q.includes('abrir spotify')) {
+                launchApp('https://open.spotify.com', 'Spotify');
+                appendMessage('hecate', 'Iniciando Spotify...');
+                return true;
+            } else if (q.startsWith('buscar ')) {
+                const searchPrompt = encodeURIComponent(query.replace('buscar ', ''));
+                launchApp(`https://www.google.com/search?q=${searchPrompt}`, 'Búsqueda');
+                appendMessage('hecate', `Ejecutando búsqueda web para: ${query.replace('buscar ', '')}`);
+                return true;
+            }
+            return false;
+        }
+
+        /* ------------------------------------------------------------------
+           5. UI RENDERERS & CHAT HELPERS
+        ------------------------------------------------------------------ */
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex gap-3 items-start animate-fade-in";
+
+            if (sender === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="ml-auto bg-hecate-purple/30 border border-hecate-neon/60 rounded-lg p-3 max-w-[85%] text-slate-100 shadow-md">
+                        <div class="font-orbitron text-[10px] text-hecate-light font-bold mb-1 text-right">USUARIO</div>
+                        <p class="font-rajdhani text-base">${escapeHTML(text)}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-black border border-hecate-purple flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-user text-hecate-light text-xs"></i>
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-hecate-purple/30 border border-hecate-neon flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-robot text-hecate-neon text-xs"></i>
+                    </div>
+                    <div class="bg-hecate-card/80 border border-hecate-purple/40 rounded-lg p-3 max-w-[85%] shadow-md">
+                        <div class="font-orbitron text-xs text-hecate-neon font-bold mb-1">HÉCATE AI</div>
+                        <p class="text-slate-200 font-rajdhani text-base">${text.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendLoadingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const loadDiv = document.createElement('div');
+            loadDiv.id = "chatLoading";
+            loadDiv.className = "flex gap-3 items-start";
+            loadDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-hecate-purple/30 border border-hecate-neon flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-microchip text-hecate-neon text-xs spin-slow"></i>
+                </div>
+                <div class="bg-hecate-card/80 border border-hecate-purple/30 rounded-lg p-3 text-hecate-light text-xs font-mono flex items-center gap-2">
+                    <span class="animate-pulse">PROCESANDO INFORMACIÓN...</span>
+                </div>
+            `;
+            container.appendChild(loadDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeLoadingIndicator() {
+            const loadDiv = document.getElementById('chatLoading');
+            if (loadDiv) loadDiv.remove();
+        }
+
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = '';
+            chatHistory = [];
+            appendMessage('hecate', 'Historial de consola reiniciado.');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        /* ------------------------------------------------------------------
+           6. NAVIGATION & APP LAUNCHER MODAL
+        ------------------------------------------------------------------ */
+        function switchTab(tab) {
+            const chatTab = document.getElementById('tabChat');
+            const launcherTab = document.getElementById('tabLauncher');
+            const chatBtn = document.getElementById('tabChatBtn');
+            const launcherBtn = document.getElementById('tabLauncherBtn');
+
+            if (tab === 'chat') {
+                chatTab.classList.remove('hidden');
+                launcherTab.classList.add('hidden');
+                chatBtn.classList.add('border-hecate-neon', 'text-white', 'bg-hecate-purple/20');
+                chatBtn.classList.remove('border-transparent', 'text-slate-400');
+                launcherBtn.classList.remove('border-hecate-neon', 'text-white', 'bg-hecate-purple/20');
+                launcherBtn.classList.add('border-transparent', 'text-slate-400');
+            } else {
+                launcherTab.classList.remove('hidden');
+                chatTab.classList.add('hidden');
+                launcherBtn.classList.add('border-hecate-neon', 'text-white', 'bg-hecate-purple/20');
+                launcherBtn.classList.remove('border-transparent', 'text-slate-400');
+                chatBtn.classList.remove('border-hecate-neon', 'text-white', 'bg-hecate-purple/20');
+                chatBtn.classList.add('border-transparent', 'text-slate-400');
+            }
+        }
+
+        function launchApp(url, title) {
+            activeIframeUrl = url;
+            document.getElementById('webModalTitle').textContent = title + " // Portal Hécate";
+            document.getElementById('webIframe').src = url;
+            document.getElementById('webModal').classList.remove('hidden');
+            document.getElementById('webModal').classList.add('flex');
+        }
+
+        function closeWebModal() {
+            document.getElementById('webModal').classList.add('hidden');
+            document.getElementById('webModal').classList.remove('flex');
+            document.getElementById('webIframe').src = 'about:blank';
+        }
+
+        function openExternalBrowser() {
+            if (activeIframeUrl) {
+                window.open(activeIframeUrl, '_blank');
+            }
+        }
+
+        function navigateDirectUrl(e) {
+            e.preventDefault();
+            let input = document.getElementById('directUrlInput').value.trim();
+            if (!input) return;
+
+            if (!input.startsWith('http://') && !input.startsWith('https://')) {
+                if (input.includes('.')) {
+                    input = 'https://' + input;
+                } else {
+                    input = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+                }
+            }
+            launchApp(input, 'Navegación');
+        }
+
+        function openCustomUrlModal() {
+            const name = prompt("Nombre del acceso directo (ej: Twitch):");
+            let url = prompt("Enlace URL (ej: https://twitch.tv):");
+            if (name && url) {
+                if (!url.startsWith('http')) url = 'https://' + url;
+                
+                const grid = document.getElementById('appGrid');
+                const card = document.createElement('div');
+                card.className = "hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group";
+                card.onclick = () => launchApp(url, name);
+                card.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-hecate-purple/20 border border-hecate-neon flex items-center justify-center text-hecate-neon group-hover:scale-110 transition mb-2">
+                        <i class="fa-solid fa-link text-xl"></i>
+                    </div>
+                    <span class="font-orbitron text-xs text-white">${escapeHTML(name)}</span>
+                    <span class="text-[10px] text-slate-400 font-mono truncate w-full">${escapeHTML(url)}</span>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function togglePwaModal() {
+            const modal = document.getElementById('pwaModal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        function toggleSettingsModal() {
+            alert("Ajustes Hécate: Sistema operando al 100% de capacidad en modo fluido morado y negro.");
+        }
+    </script>
+</body>
+</html>
