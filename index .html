@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-black text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HÉCATE S.I. // Technomancer & Arcane AI</title>
+    
+    <!-- PWA Primary Meta Tags -->
+    <meta name="theme-color" content="#05010a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hécate S.I.">
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
+        %22name%22: %22H%C3%A9cate%20S.I.%22,
+        %22short_name%22: %22H%C3%A9cate%22,
+        %22start_url%22: %22./index.html%22,
+        %22display%22: %22standalone%22,
+        %22background_color%22: %22%2305010a%22,
+        %22theme_color%22: %22%239d4edd%22,
+        %22icons%22: [{
+            %22src%22: %22https://via.placeholder.com/192/9d4edd/ffffff?text=H%22,
+            %22sizes%22: %22192x192%22,
+            %22type%22: %22image/png%22
+        }]
+    }">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hecate: {
+                            base: '#05010a',
+                            dark: '#0d001a',
+                            card: '#150028',
+                            purple: '#9d4edd',
+                            neon: '#bc13fe',
+                            light: '#c77dff',
+                            glow: '#e0aaff',
+                            cyan: '#00f0ff'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace']
+                    },
+                    boxShadow: {
+                        'neon-purple': '0 0 15px rgba(157, 78, 221, 0.4), 0 0 30px rgba(188, 19, 254, 0.2)',
+                        'neon-strong': '0 0 25px rgba(188, 19, 254, 0.7), 0 0 50px rgba(157, 78, 221, 0.5)',
+                        'inner-purple': 'inset 0 0 15px rgba(188, 19, 254, 0.3)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #120024 0%, #05010a 70%, #000000 100%);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .hud-panel {
+            background: rgba(18, 2, 33, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(188, 19, 254, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(13, 0, 26, 0.6), inset 0 0 12px rgba(188, 19, 254, 0.15);
+            position: relative;
+        }
+
+        .hud-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(188, 19, 254, 0.8), transparent);
+        }
+
+        .hud-corner {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-color: #bc13fe;
+            pointer-events: none;
+        }
+        .hud-corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+        .hud-corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+        .hud-corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+        .hud-corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        @keyframes rotateClockwise { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotateCounter { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+        @keyframes pulseGlow { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.05); } }
+
+        .spin-slow { animation: rotateClockwise 20s linear infinite; }
+        .spin-reverse { animation: rotateCounter 15s linear infinite; }
+        .pulse-core { animation: pulseGlow 3s ease-in-out infinite; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(10, 0, 20, 0.8); }
+        ::-webkit-scrollbar-thumb { background: #9d4edd; border-radius: 3px; }
+
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.35) 50%,
+                rgba(0, 0, 0, 0.35)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        pre code {
+            font-family: 'Share Tech Mono', monospace;
+            display: block;
+            background: rgba(5, 1, 10, 0.9);
+            border: 1px solid rgba(157, 78, 221, 0.5);
+            padding: 10px;
+            border-radius: 6px;
+            color: #e0aaff;
+            overflow-x: auto;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            user-select: text;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-200 flex flex-col justify-between selection:bg-hecate-purple selection:text-white relative min-h-screen">
+
+    <div class="fixed inset-0 scanlines z-50 pointer-events-none opacity-25"></div>
+    <div class="fixed inset-0 bg-[radial-gradient(#9d4edd_1px,transparent_1px)] [background-size:32px_32px] opacity-10 pointer-events-none"></div>
+
+    <!-- HEADER -->
+    <header class="relative z-20 px-4 py-3 border-b border-hecate-purple/30 bg-hecate-dark/90 backdrop-blur-md flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="w-9 h-9 rounded-full border border-hecate-neon flex items-center justify-center relative shadow-neon-purple hover:bg-hecate-purple/20 transition">
+                <i class="fa-solid fa-bars text-hecate-neon text-sm"></i>
+            </button>
+            <div class="w-9 h-9 rounded-full border border-hecate-neon flex items-center justify-center relative shadow-neon-purple cursor-pointer" onclick="togglePwaModal()">
+                <div class="absolute inset-0 rounded-full border border-dashed border-hecate-light spin-slow"></div>
+                <i class="fa-solid fa-hat-wizard text-hecate-neon text-sm"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-hecate-light to-hecate-neon">
+                    HÉCATE S.I. <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-hecate-purple/30 text-hecate-light border border-hecate-purple/50">v8.0</span>
+                </h1>
+                <p class="text-[10px] font-mono text-hecate-light/70 tracking-widest uppercase">Tecnomante Arcano & Gestor de Conversaciones</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="toggleIncognitoMode()" id="incognitoBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 border border-slate-600 text-slate-400 text-xs font-orbitron hover:border-hecate-neon transition-all">
+                <i class="fa-solid fa-user-ninja"></i>
+                <span class="hidden sm:inline">INCÓGNITO</span>
+            </button>
+            <button onclick="togglePersonalityModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-hecate-purple/30 border border-hecate-neon text-hecate-light text-xs font-orbitron hover:bg-hecate-neon hover:text-black transition-all shadow-neon-purple">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="hidden md:inline">PERSONALIDAD</span>
+            </button>
+            <button id="installBtn" onclick="installPWA()" class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-hecate-purple/20 border border-hecate-neon text-hecate-light text-xs font-orbitron hover:bg-hecate-neon hover:text-black transition-all shadow-neon-purple">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden sm:inline">INSTALAR</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN DISPLAY -->
+    <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- LEFT SIDEBAR: CHAT HISTORY & WIDGET -->
+        <section id="sidebarContainer" class="lg:col-span-4 flex flex-col gap-4">
+            
+            <!-- CHAT MANAGEMENT PANEL -->
+            <div class="hud-panel rounded-xl p-4 flex flex-col max-h-[380px]">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="flex justify-between items-center pb-2 mb-3 border-b border-hecate-purple/30">
+                    <span class="font-orbitron text-xs font-bold text-hecate-light flex items-center gap-2">
+                        <i class="fa-solid fa-comments text-hecate-neon"></i> CONVERSACIONES
+                    </span>
+                    <button onclick="createNewChat()" class="px-2 py-1 text-[11px] font-mono bg-hecate-purple/40 border border-hecate-neon text-hecate-light rounded hover:bg-hecate-neon hover:text-black transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> NUEVA
+                    </button>
+                </div>
+
+                <!-- CHATS LIST -->
+                <div id="chatsList" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <!-- Dynamic chat list items populated by JS -->
+                </div>
+
+                <p class="text-[10px] font-mono text-slate-400 mt-2 text-center border-t border-hecate-purple/20 pt-2">
+                    💡 Mantén presionado o clic derecho para Fijar 📌, Renombrar ✏️ o Borrar 🗑️.
+                </p>
+            </div>
+
+            <!-- WIDGET -->
+            <div class="hud-panel rounded-xl p-5 relative overflow-hidden">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="flex justify-between items-center mb-2 border-b border-hecate-purple/30 pb-2">
+                    <span class="font-mono text-xs text-hecate-neon tracking-widest uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-hecate-neon animate-ping"></span>
+                        ESTADO RITUAL
+                    </span>
+                    <span id="personalityBadge" class="text-[10px] font-mono text-hecate-light px-2 py-0.5 rounded bg-hecate-purple/40 border border-hecate-purple/60">Tecnomante</span>
+                </div>
+
+                <div class="text-center py-1">
+                    <div id="clockDisplay" class="font-orbitron text-3xl sm:text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(188,19,254,0.6)]">
+                        00:00:00
+                    </div>
+                    <div id="dateDisplay" class="font-mono text-xs text-hecate-light tracking-wider mt-1 uppercase">
+                        Sincronizando...
+                    </div>
+                </div>
+
+                <div class="mt-2 pt-2 border-t border-hecate-purple/20 flex justify-between items-center bg-black/40 p-2 rounded border border-hecate-purple/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-moon text-xl text-hecate-neon"></i>
+                        <span class="font-orbitron text-sm font-bold text-white">22°C</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-emerald-400">Online // Sync OK</span>
+                </div>
+            </div>
+
+            <!-- CORE MIC BUTTON -->
+            <div class="hud-panel rounded-xl p-4 flex flex-col items-center justify-center relative min-h-[160px]">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="relative w-28 h-28 flex items-center justify-center cursor-pointer" onclick="toggleVoiceRecognition()">
+                    <div class="absolute inset-0 rounded-full border-2 border-dashed border-hecate-neon/60 spin-slow"></div>
+                    <div class="absolute inset-2 rounded-full border border-hecate-purple/80 spin-reverse"></div>
+                    
+                    <div id="aiCoreCircle" class="w-16 h-16 rounded-full bg-gradient-to-tr from-hecate-dark via-hecate-purple to-hecate-neon flex items-center justify-center shadow-neon-strong pulse-core transition-transform duration-300 hover:scale-110">
+                        <i id="coreMicIcon" class="fa-solid fa-microphone text-xl text-white"></i>
+                    </div>
+                </div>
+                
+                <p id="coreStatusText" class="font-mono text-[11px] text-hecate-light tracking-widest uppercase mt-3 text-center">
+                    TOCA PARA DIALOGAR POR VOZ
+                </p>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: CHAT & GENERATIVE STUDIO -->
+        <section class="lg:col-span-8 flex flex-col gap-5">
+            
+            <!-- TABS -->
+            <div class="flex border-b border-hecate-purple/30 gap-2 font-orbitron text-xs">
+                <button id="tabChatBtn" onclick="switchTab('chat')" class="px-4 py-2.5 border-b-2 border-hecate-neon text-white font-bold bg-hecate-purple/20 rounded-t-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-code text-hecate-neon"></i> CHAT & CÓDIGO
+                </button>
+                <button id="tabGenBtn" onclick="switchTab('studio')" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-hecate-purple"></i> ESTUDIO MULTIMEDIA
+                </button>
+                <button id="tabLauncherBtn" onclick="switchTab('launcher')" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-hecate-purple"></i> NAVEGADOR
+                </button>
+            </div>
+
+            <!-- TAB 1: CHAT & VOICE -->
+            <div id="tabChat" class="hud-panel rounded-xl p-4 flex flex-col h-[540px]">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="flex justify-between items-center pb-3 mb-3 border-b border-hecate-purple/20">
+                    <div class="flex items-center gap-2">
+                        <span id="chatModeBadge" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="activeChatTitleDisplay" class="font-mono text-xs text-hecate-light truncate max-w-[220px] sm:max-w-xs">Chat General</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="ttsToggle" checked class="accent-hecate-neon">
+                            <span class="hidden sm:inline">Voz Expresiva</span>
+                        </label>
+                        <button onclick="clearCurrentChatMessages()" class="text-xs font-mono text-slate-400 hover:text-rose-400 transition" title="Limpiar mensajes">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 pr-2 font-rajdhani text-base select-text">
+                    <!-- Dynamic Messages -->
+                </div>
+
+                <div id="imagePreviewContainer" class="hidden items-center gap-2 p-2 bg-black/50 border border-hecate-purple/40 rounded-lg mt-2">
+                    <img id="imagePreview" class="h-12 w-12 object-cover rounded border border-hecate-neon" src="" alt="Vista previa">
+                    <span class="text-xs font-mono text-hecate-light flex-1 truncate" id="imagePreviewName">imagen.png</span>
+                    <button type="button" onclick="clearSelectedImage()" class="text-rose-400 hover:text-white px-2">✕</button>
+                </div>
+
+                <form id="chatForm" onsubmit="handleFormSubmit(event)" class="mt-3 pt-3 border-t border-hecate-purple/30 flex gap-2">
+                    <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+                    
+                    <button type="button" onclick="document.getElementById('imageFileInput').click()" class="px-3 py-2.5 rounded-lg bg-hecate-purple/20 border border-hecate-neon text-hecate-light hover:bg-hecate-neon hover:text-black transition font-mono text-sm flex items-center gap-1 shadow-neon-purple" title="Adjuntar Imagen">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                    
+                    <button type="button" onclick="toggleVoiceRecognition()" class="px-3 py-2.5 rounded-lg bg-hecate-purple/20 border border-hecate-neon text-hecate-light hover:bg-hecate-neon hover:text-black transition font-mono text-sm flex items-center gap-1 shadow-neon-purple" title="Hablar por Micrófono">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    
+                    <input type="text" id="userInput" placeholder="Consulta sobre código, brujería o solicita imágenes/video..." class="flex-1 bg-black/60 border border-hecate-purple/50 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-hecate-neon transition">
+                    
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-hecate-purple to-hecate-neon text-white font-orbitron font-bold text-xs rounded-lg hover:shadow-neon-strong transition flex items-center gap-2">
+                        <span>ENVIAR</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- TAB 2: GENERATION STUDIO -->
+            <div id="tabStudio" class="hud-panel rounded-xl p-5 hidden flex-col h-[540px] overflow-y-auto">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <h3 class="font-orbitron text-sm font-bold text-hecate-light mb-3 flex items-center gap-2 border-b border-hecate-purple/30 pb-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-hecate-neon"></i> ESTUDIO GENERATIVO MULTIMEDIA
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-black/50 p-4 rounded-lg border border-hecate-purple/40 flex flex-col justify-between">
+                        <div>
+                            <div class="font-orbitron text-xs text-white font-bold mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-image text-hecate-neon"></i> GENERADOR DE IMÁGENES
+                            </div>
+                            <p class="text-xs text-slate-300 font-rajdhani mb-3">
+                                Ilustraciones cyberpunk, sigilos arcanos, esquemas o arte HD.
+                            </p>
+                            <textarea id="studioImgPrompt" rows="3" placeholder="Ej: Un sigilo neón morado flotando sobre un circuito de servidor..." class="w-full bg-black/80 border border-hecate-purple/50 rounded p-2 text-xs font-mono text-white focus:outline-none focus:border-hecate-neon mb-3"></textarea>
+                        </div>
+                        <button onclick="generateStudioContent('image')" class="w-full py-2 bg-hecate-purple hover:bg-hecate-neon text-white font-orbitron font-bold text-xs rounded transition flex items-center justify-center gap-2 shadow-neon-purple">
+                            <i class="fa-solid fa-paint-brush"></i> GENERAR IMAGEN
+                        </button>
+                    </div>
+
+                    <div class="bg-black/50 p-4 rounded-lg border border-hecate-purple/40 flex flex-col justify-between">
+                        <div>
+                            <div class="font-orbitron text-xs text-white font-bold mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-video text-hecate-neon"></i> GENERADOR DE VIDEO
+                            </div>
+                            <p class="text-xs text-slate-300 font-rajdhani mb-3">
+                                Renderiza secuencias cinemáticas o animaciones arcanas.
+                            </p>
+                            <textarea id="studioVidPrompt" rows="3" placeholder="Ej: Energía esotérica morada fluyendo por un procesador..." class="w-full bg-black/80 border border-hecate-purple/50 rounded p-2 text-xs font-mono text-white focus:outline-none focus:border-hecate-neon mb-3"></textarea>
+                        </div>
+                        <button onclick="generateStudioContent('video')" class="w-full py-2 bg-hecate-purple hover:bg-hecate-neon text-white font-orbitron font-bold text-xs rounded transition flex items-center justify-center gap-2 shadow-neon-purple">
+                            <i class="fa-solid fa-clapperboard"></i> GENERAR VIDEO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-5 border-t border-hecate-purple/30 pt-3">
+                    <div class="font-orbitron text-xs text-hecate-light font-bold mb-2">GALERÍA DE CREACIONES</div>
+                    <div id="studioGallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div class="text-xs font-mono text-slate-500 col-span-full text-center py-6 border border-dashed border-hecate-purple/20 rounded">
+                            Tus creaciones multimedia guardadas aparecerán aquí.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: LAUNCHER -->
+            <div id="tabLauncher" class="hud-panel rounded-xl p-5 hidden flex-col h-[540px] overflow-y-auto">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+
+                <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/20 pb-2">
+                    <h3 class="font-orbitron text-sm font-bold text-hecate-light flex items-center gap-2">
+                        <i class="fa-solid fa-link text-hecate-neon"></i> MATRIZ DE ACCESOS RÁPIDOS
+                    </h3>
+                    <button onclick="addCustomShortcut()" class="px-2.5 py-1 text-xs font-mono bg-hecate-purple/30 border border-hecate-neon rounded text-hecate-light hover:bg-hecate-neon hover:text-black transition">
+                        + AGREGAR SITIO
+                    </button>
+                </div>
+
+                <div id="appGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div onclick="launchApp('https://web.whatsapp.com', 'WhatsApp')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <i class="fa-brands fa-whatsapp text-3xl text-emerald-400 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="font-orbitron text-xs text-white">WhatsApp</span>
+                    </div>
+
+                    <div onclick="launchApp('https://youtube.com', 'YouTube')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <i class="fa-brands fa-youtube text-3xl text-red-500 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="font-orbitron text-xs text-white">YouTube</span>
+                    </div>
+
+                    <div onclick="launchApp('https://open.spotify.com', 'Spotify')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <i class="fa-brands fa-spotify text-3xl text-green-400 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="font-orbitron text-xs text-white">Spotify</span>
+                    </div>
+
+                    <div onclick="launchApp('https://google.com', 'Google')" class="hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group">
+                        <i class="fa-brands fa-google text-3xl text-blue-400 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="font-orbitron text-xs text-white">Google</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-hecate-purple/30">
+                    <h4 class="font-orbitron text-xs text-hecate-light mb-2">NAVEGADOR DIRECTO INTERNO</h4>
+                    <form onsubmit="navigateDirectUrl(event)" class="flex gap-2">
+                        <input type="text" id="directUrlInput" placeholder="URL o búsqueda (ej. https://github.com)..." class="flex-1 bg-black/60 border border-hecate-purple/50 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-hecate-neon">
+                        <button type="submit" class="px-4 py-2 bg-hecate-neon text-black font-orbitron font-bold text-xs rounded-lg hover:bg-white transition">
+                            ABRIR
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FLOATING CONTEXT MENU FOR CHATS -->
+    <div id="chatContextMenu" class="fixed z-50 hidden bg-hecate-card border border-hecate-neon rounded-lg shadow-neon-strong p-1.5 w-48 text-xs font-mono">
+        <button onclick="contextActionPin()" class="w-full text-left px-3 py-2 rounded hover:bg-hecate-purple/40 text-hecate-light flex items-center gap-2">
+            <i id="contextPinIcon" class="fa-solid fa-thumbtack"></i> <span id="contextPinText">Fijar Chat</span>
+        </button>
+        <button onclick="contextActionRename()" class="w-full text-left px-3 py-2 rounded hover:bg-hecate-purple/40 text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-pen"></i> Cambiar Nombre
+        </button>
+        <button onclick="contextActionDelete()" class="w-full text-left px-3 py-2 rounded hover:bg-rose-500/30 text-rose-300 flex items-center gap-2 border-t border-hecate-purple/20 mt-1 pt-1">
+            <i class="fa-solid fa-trash"></i> Borrar Chat
+        </button>
+    </div>
+
+    <!-- PERSONALITY MODAL -->
+    <div id="personalityModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-panel max-w-md w-full rounded-xl p-6 relative">
+            <div class="hud-corner hud-corner-tl"></div>
+            <div class="hud-corner hud-corner-tr"></div>
+            <div class="hud-corner hud-corner-bl"></div>
+            <div class="hud-corner hud-corner-br"></div>
+
+            <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/30 pb-2">
+                <h3 class="font-orbitron font-bold text-hecate-neon text-base flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> PERSONALIDAD Y VOZ
+                </h3>
+                <button onclick="togglePersonalityModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <div class="space-y-4 font-rajdhani text-sm">
+                <div>
+                    <label class="block font-orbitron text-xs text-hecate-light mb-1">Nombre de la Asistente:</label>
+                    <input type="text" id="botNameInput" value="Hécate S.I." class="w-full bg-black/80 border border-hecate-purple/50 rounded p-2 text-white font-mono focus:border-hecate-neon">
+                </div>
+
+                <div>
+                    <label class="block font-orbitron text-xs text-hecate-light mb-1">Perfil de Conocimiento & Tono:</label>
+                    <select id="personalityToneSelect" onchange="updatePersonalityTone()" class="w-full bg-black/80 border border-hecate-purple/50 rounded p-2 text-white font-mono focus:border-hecate-neon">
+                        <option value="tecnomante" selected>Tecnomante Arcano (Código + Brujería)</option>
+                        <option value="humano">Humana y Cálida</option>
+                        <option value="hechicera">Alta Hechicera (Mística Puro)</option>
+                        <option value="jarvis">Jarvis HUD (Táctico / Programador)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-orbitron text-xs text-hecate-light mb-1">Velocidad de Voz:</label>
+                    <input type="range" id="voiceRateInput" min="0.8" max="1.3" step="0.05" value="1.0" class="w-full accent-hecate-neon">
+                </div>
+
+                <div>
+                    <label class="block font-orbitron text-xs text-hecate-light mb-1">Tono de Voz (Pitch):</label>
+                    <input type="range" id="voicePitchInput" min="0.8" max="1.4" step="0.05" value="1.1" class="w-full accent-hecate-neon">
+                </div>
+            </div>
+
+            <button onclick="savePersonalitySettings()" class="w-full mt-5 py-2.5 bg-gradient-to-r from-hecate-purple to-hecate-neon text-white font-orbitron font-bold text-xs rounded-lg hover:shadow-neon-strong transition">
+                GUARDAR CAMBIOS
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL IN-APP BROWSER -->
+    <div id="webModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex-col p-2 sm:p-4">
+        <div class="hud-panel rounded-t-xl p-3 flex justify-between items-center border-b border-hecate-neon">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <i class="fa-solid fa-globe text-hecate-neon"></i>
+                <span id="webModalTitle" class="font-orbitron text-xs font-bold text-white truncate">Navegador Hécate</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openExternalBrowser()" class="px-2 py-1 text-[11px] font-mono bg-hecate-purple/30 text-hecate-light rounded hover:bg-hecate-purple">
+                    Abrir Externo <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+                </button>
+                <button onclick="closeWebModal()" class="w-7 h-7 rounded bg-rose-500/20 border border-rose-500 text-rose-300 flex items-center justify-center hover:bg-rose-500 hover:text-white">
+                    ✕
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 bg-white rounded-b-xl overflow-hidden relative">
+            <iframe id="webIframe" class="w-full h-full border-0" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <!-- MODAL PWA -->
+    <div id="pwaModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-panel max-w-md w-full rounded-xl p-6 relative">
+            <div class="hud-corner hud-corner-tl"></div>
+            <div class="hud-corner hud-corner-tr"></div>
+            <div class="hud-corner hud-corner-bl"></div>
+            <div class="hud-corner hud-corner-br"></div>
+
+            <div class="flex justify-between items-center mb-4 border-b border-hecate-purple/30 pb-2">
+                <h3 class="font-orbitron font-bold text-hecate-neon text-base flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen"></i> INSTALAR EN TU PANTALLA
+                </h3>
+                <button onclick="togglePwaModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <div class="flex flex-col items-center justify-center py-2">
+                <canvas id="iconCanvas" width="128" height="128" class="rounded-2xl border-2 border-hecate-neon shadow-neon-strong mb-2"></canvas>
+                <span class="font-orbitron text-xs text-hecate-light font-bold">ÍCONO HÉCATE S.I.</span>
+            </div>
+
+            <p class="text-xs text-slate-300 font-rajdhani my-3 text-center leading-relaxed">
+                Guarda esta app en tu pantalla de inicio para abrirla como una aplicación web nativa independiente.
+            </p>
+
+            <button onclick="installPWA()" class="w-full py-2.5 bg-gradient-to-r from-hecate-purple to-hecate-neon text-white font-orbitron font-bold text-xs rounded-lg hover:shadow-neon-strong transition">
+                INSTALAR
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT ENGINE -->
+    <script>
+        let deferredPrompt = null;
+        let activeIframeUrl = '';
+        let selectedImageDataUrl = null;
+
+        let currentPersonality = 'tecnomante';
+        let botName = 'Hécate S.I.';
+
+        // CHAT ENGINE STATE
+        let chats = [];
+        let activeChatId = 'default-chat';
+        let isIncognito = false;
+        let incognitoMessages = [];
+        let contextTargetChatId = null;
+        let longPressTimer = null;
+
+        window.addEventListener('load', () => {
+            initClock();
+            generatePWAIcon();
+            loadChatsFromStorage();
+            renderChatsList();
+            renderActiveChat();
+        });
+
+        /* 1. STORAGE & CHAT MANAGEMENT */
+        function loadChatsFromStorage() {
+            const saved = localStorage.getItem('hecate_chats');
+            if (saved) {
+                try {
+                    chats = JSON.parse(saved);
+                } catch(e) {
+                    chats = [];
+                }
+            }
+            if (!chats || chats.length === 0) {
+                chats = [{
+                    id: 'default-chat',
+                    title: 'Chat Principal',
+                    pinned: false,
+                    updatedAt: Date.now(),
+                    messages: [{
+                        sender: 'hecate',
+                        text: 'Saludos. Domino tanto la arquitectura de software (código limpio, algoritmos y depuración) como las artes arcanas de la brujería (tarot, sigilos, astrología y rituales). Puedes pedirme código, una tirada de cartas, analizar fotos o generar imágenes/video. ¿Por dónde empezamos?'
+                    }]
+                }];
+                saveChatsToStorage();
+            }
+        }
+
+        function saveChatsToStorage() {
+            if (!isIncognito) {
+                localStorage.setItem('hecate_chats', JSON.stringify(chats));
+            }
+        }
+
+        function getActiveChat() {
+            if (isIncognito) {
+                return {
+                    id: 'incognito-chat',
+                    title: '🕵️ Incógnito (No Guardado)',
+                    pinned: false,
+                    messages: incognitoMessages
+                };
+            }
+            return chats.find(c => c.id === activeChatId) || chats[0];
+        }
+
+        function renderChatsList() {
+            const listEl = document.getElementById('chatsList');
+            listEl.innerHTML = '';
+
+            // Sort: pinned first, then by updatedAt descending
+            const sortedChats = [...chats].sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+                return (b.updatedAt || 0) - (a.updatedAt || 0);
+            });
+
+            sortedChats.forEach(chat => {
+                const isActive = !isIncognito && chat.id === activeChatId;
+                const item = document.createElement('div');
+                item.className = `p-2.5 rounded-lg border text-xs font-mono cursor-pointer transition flex items-center justify-between group ${
+                    isActive 
+                    ? 'bg-hecate-purple/30 border-hecate-neon text-white shadow-neon-purple' 
+                    : 'bg-black/40 border-hecate-purple/20 text-slate-300 hover:border-hecate-purple/60 hover:text-white'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        ${chat.pinned ? '<i class="fa-solid fa-thumbtack text-hecate-neon text-[10px]"></i>' : '<i class="fa-regular fa-message text-slate-500 text-[10px]"></i>'}
+                        <span class="truncate">${escapeHTML(chat.title)}</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 opacity-0 group-hover:opacity-100 transition">⋮</span>
+                `;
+
+                // Select Chat Click
+                item.addEventListener('click', () => {
+                    if (isIncognito) toggleIncognitoMode();
+                    activeChatId = chat.id;
+                    renderChatsList();
+                    renderActiveChat();
+                });
+
+                // Context Menu on Right-Click
+                item.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    openContextMenu(e.clientX, e.clientY, chat.id);
+                });
+
+                // Long Press Trigger for Touch Devices
+                item.addEventListener('touchstart', (e) => {
+                    longPressTimer = setTimeout(() => {
+                        const touch = e.touches[0];
+                        openContextMenu(touch.clientX, touch.clientY, chat.id);
+                    }, 500);
+                }, { passive: true });
+
+                item.addEventListener('touchend', () => clearTimeout(longPressTimer));
+                item.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+                listEl.appendChild(item);
+            });
+        }
+
+        function createNewChat() {
+            if (isIncognito) toggleIncognitoMode();
+            const newId = 'chat-' + Date.now();
+            const newChat = {
+                id: newId,
+                title: `Chat ${chats.length + 1}`,
+                pinned: false,
+                updatedAt: Date.now(),
+                messages: [{
+                    sender: 'hecate',
+                    text: 'Nuevo canal de diálogo iniciado. ¿En qué código o misterio arcano profundizaremos?'
+                }]
+            };
+            chats.unshift(newChat);
+            activeChatId = newId;
+            saveChatsToStorage();
+            renderChatsList();
+            renderActiveChat();
+        }
+
+        function toggleIncognitoMode() {
+            isIncognito = !isIncognito;
+            const btn = document.getElementById('incognitoBtn');
+            const badge = document.getElementById('chatModeBadge');
+
+            if (isIncognito) {
+                btn.classList.add('bg-hecate-neon', 'text-black', 'border-hecate-neon');
+                btn.classList.remove('bg-black/60', 'text-slate-400');
+                badge.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+                if (incognitoMessages.length === 0) {
+                    incognitoMessages = [{
+                        sender: 'hecate',
+                        text: 'Modo Incógnito Activado. Esta sesión se mantendrá en memoria efímera y no dejará rastro al cerrar.'
+                    }];
+                }
+            } else {
+                btn.classList.remove('bg-hecate-neon', 'text-black', 'border-hecate-neon');
+                btn.classList.add('bg-black/60', 'text-slate-400');
+                badge.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+            }
+
+            renderChatsList();
+            renderActiveChat();
+        }
+
+        /* 2. CONTEXT MENU ACTIONS (LONG PRESS / RIGHT CLICK) */
+        function openContextMenu(x, y, chatId) {
+            contextTargetChatId = chatId;
+            const menu = document.getElementById('chatContextMenu');
+            const targetChat = chats.find(c => c.id === chatId);
+            if (!targetChat) return;
+
+            document.getElementById('contextPinText').textContent = targetChat.pinned ? "Desfijar Chat" : "Fijar Chat";
+            
+            menu.style.left = `${Math.min(x, window.innerWidth - 200)}px`;
+            menu.style.top = `${Math.min(y, window.innerHeight - 150)}px`;
+            menu.classList.remove('hidden');
+        }
+
+        function hideContextMenu() {
+            document.getElementById('chatContextMenu').classList.add('hidden');
+        }
+
+        document.addEventListener('click', hideContextMenu);
+
+        function contextActionPin() {
+            const chat = chats.find(c => c.id === contextTargetChatId);
+            if (chat) {
+                chat.pinned = !chat.pinned;
+                saveChatsToStorage();
+                renderChatsList();
+            }
+            hideContextMenu();
+        }
+
+        function contextActionRename() {
+            const chat = chats.find(c => c.id === contextTargetChatId);
+            if (chat) {
+                const newTitle = prompt("Nuevo nombre para el chat:", chat.title);
+                if (newTitle && newTitle.trim()) {
+                    chat.title = newTitle.trim();
+                    saveChatsToStorage();
+                    renderChatsList();
+                    if (activeChatId === chat.id) renderActiveChat();
+                }
+            }
+            hideContextMenu();
+        }
+
+        function contextActionDelete() {
+            if (chats.length <= 1) {
+                alert("Debes conservar al menos un chat activo.");
+                hideContextMenu();
+                return;
+            }
+            chats = chats.filter(c => c.id !== contextTargetChatId);
+            if (activeChatId === contextTargetChatId) {
+                activeChatId = chats[0].id;
+            }
+            saveChatsToStorage();
+            renderChatsList();
+            renderActiveChat();
+            hideContextMenu();
+        }
+
+        function clearCurrentChatMessages() {
+            const current = getActiveChat();
+            current.messages = [];
+            if (!isIncognito) saveChatsToStorage();
+            renderActiveChat();
+        }
+
+        /* 3. CLOCK & WIDGET */
+        function initClock() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('clockDisplay').textContent = `${h}:${m}:${s}`;
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        /* 4. SPEECH RECOGNITION & SYNTHESIS */
+        let recognition = null;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'es-ES';
+
+            recognition.onstart = () => {
+                isListening = true;
+                setCoreState(true);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value = transcript;
+                processInput(transcript);
+            };
+
+            recognition.onerror = () => setCoreState(false);
+            recognition.onend = () => {
+                isListening = false;
+                setCoreState(false);
+            };
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                alert("El micrófono no está disponible en este navegador o requiere conexión segura HTTPS.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function setCoreState(active) {
+            const core = document.getElementById('aiCoreCircle');
+            const statusText = document.getElementById('coreStatusText');
+
+            if (active) {
+                core.classList.add('ring-4', 'ring-hecate-neon');
+                statusText.textContent = "ESCUCHANDO TU INVOCACIÓN / CÓDIGO...";
+                statusText.classList.add('text-hecate-neon');
+            } else {
+                core.classList.remove('ring-4', 'ring-hecate-neon');
+                statusText.textContent = `TOCA PARA DIALOGAR CON ${botName.toUpperCase()}`;
+                statusText.classList.remove('text-hecate-neon');
+            }
+        }
+
+        function speak(text) {
+            const ttsEnabled = document.getElementById('ttsToggle').checked;
+            if (!ttsEnabled || !('speechSynthesis' in window)) return;
+
+            window.speechSynthesis.cancel();
+            
+            const cleanText = text.replace(/[*_#`~]/g, '');
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            
+            utterance.lang = 'es-ES';
+            utterance.rate = parseFloat(document.getElementById('voiceRateInput').value) || 1.0;
+            utterance.pitch = parseFloat(document.getElementById('voicePitchInput').value) || 1.1;
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.includes('es') && (v.name.includes('Natural') || v.name.includes('Monica') || v.name.includes('Lucia') || v.name.includes('Google')));
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        /* 5. IMAGE SELECTION & ATTACHMENT */
+        function handleImageSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageDataUrl = e.target.result;
+                    document.getElementById('imagePreview').src = selectedImageDataUrl;
+                    document.getElementById('imagePreviewName').textContent = file.name;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    document.getElementById('imagePreviewContainer').classList.add('flex');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearSelectedImage() {
+            selectedImageDataUrl = null;
+            document.getElementById('imageFileInput').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.remove('flex');
+        }
+
+        /* 6. CHAT RENDERING & FORM SUBMISSION */
+        function renderActiveChat() {
+            const current = getActiveChat();
+            document.getElementById('activeChatTitleDisplay').textContent = current.title;
+
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+
+            current.messages.forEach(msg => {
+                appendMessageElement(msg.sender, msg.text, msg.imgSrc);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const inputEl = document.getElementById('userInput');
+            const query = inputEl.value.trim();
+            const imgSrc = selectedImageDataUrl;
+
+            if (!query && !imgSrc) return;
+
+            processInput(query, imgSrc);
+            inputEl.value = '';
+            clearSelectedImage();
+        }
+
+        function processInput(query, imgSrc = null) {
+            const current = getActiveChat();
+            const userMsg = { sender: 'user', text: query || "Imagen adjuntada para escaneo", imgSrc };
+            
+            current.messages.push(userMsg);
+            if (!isIncognito) {
+                current.updatedAt = Date.now();
+                saveChatsToStorage();
+                renderChatsList();
+            }
+            renderActiveChat();
+
+            const q = query ? query.toLowerCase() : "";
+
+            // MEDIA GENERATION COMMANDS
+            if (q.includes("genera una imagen") || q.includes("crea una imagen") || q.includes("dibuja") || q.includes("haz una imagen")) {
+                const prompt = query.replace(/genera una imagen|crea una imagen|dibuja|haz una imagen/gi, '').trim();
+                triggerImageGeneration(prompt || "Un sigilo místico neón sobre código binario brillante");
+                return;
+            }
+
+            if (q.includes("genera un video") || q.includes("crea un video") || q.includes("haz un video")) {
+                const prompt = query.replace(/genera un video|crea un video|haz un video/gi, '').trim();
+                triggerVideoGeneration(prompt || "Energía mágica morada fluyendo a través de circuitos digitales");
+                return;
+            }
+
+            // DUAL EXPERTISE INTELLIGENCE
+            let response = generateDualExpertiseResponse(q, imgSrc);
+
+            setTimeout(() => {
+                const botMsg = { sender: 'hecate', text: response };
+                current.messages.push(botMsg);
+                if (!isIncognito) {
+                    current.updatedAt = Date.now();
+                    saveChatsToStorage();
+                    renderChatsList();
+                }
+                renderActiveChat();
+                speak(response);
+            }, 300);
+        }
+
+        function generateDualExpertiseResponse(query, hasImage) {
+            if (hasImage) {
+                if (currentPersonality === 'tecnomante') return "Imagen decodificada. Mis sensores ópticos analizan los patrones de la foto tanto en su estructura de píxeles como en su resonancia esotérica. ¿Deseas depurar una interfaz o revelar una señal astral?";
+                if (currentPersonality === 'hechicera') return "La imagen ha sido velada ante el altar. Veo símbolos y flujos de energía latentes. ¿Qué velo deseas que corra?";
+                if (currentPersonality === 'jarvis') return "Muestra visual recibida y procesada en el buffer. Lista para análisis técnico.";
+                return "¡Foto recibida! Ya la tengo abierta. Cuéntame qué quieres que revise en ella.";
+            }
+
+            if (query.includes("tarot") || query.includes("cartas") || query.includes("tirada")) {
+                const cards = ["La Sacerdotisa (Sabiduría oculta y lógica profunda)", "El Mago (Poder de manifestación y dominación del código)", "La Estrella (Esperanza, inspiración y arquitectura perfecta)", "La Torre (Reestructuración necesaria o refactorización total)", "La Rueda de la Fortuna (Ciclos de ejecución)"];
+                const chosenCard = cards[Math.floor(Math.random() * cards.length)];
+                if (currentPersonality === 'tecnomante') {
+                    return `Sintonizando la matriz del Tarot Arcano... La carta revelada es **${chosenCard}**. Representa que la energía de tus programas y tus intenciones está en punto de alineación.`;
+                }
+                return `Las cartas del oráculo se abren ante ti. Ha salido **${chosenCard}**. Presta atención a las señales de tu intuición hoy.`;
+            }
+
+            if (query.includes("codigo") || query.includes("código") || query.includes("programar") || query.includes("python") || query.includes("javascript") || query.includes("html") || query.includes("css") || query.includes("función") || query.includes("bug")) {
+                let codeSnippet = "";
+                if (query.includes("python")) {
+                    codeSnippet = `\n\`\`\`python\n# Algoritmo Tecnomante en Python\ndef invocar_matriz(datos):\n    # Filtrar frecuencias\n    resultado = [x * 2 for x in datos if x > 0]\n    return {"status": "success", "resultado": resultado}\n\nprint(invocar_matriz([1, -2, 3, 5]))\n\`\`\``;
+                } else {
+                    codeSnippet = `\n\`\`\`javascript\n// Función de procesamiento asíncrono\nasync function manifestarCodigo(intent) {\n    try {\n        const response = await fetch('/api/arcanum', { method: 'POST', body: JSON.stringify({ intent }) });\n        return await response.json();\n    } catch (err) {\n        console.error("Error en la matriz:", err);\n    }\n}\n\`\`\``;
+                }
+
+                if (currentPersonality === 'tecnomante') {
+                    return `Escribir código es encantar la realidad a través de la sintaxis. Aquí tienes una solución optimizada con arquitectura limpia:${codeSnippet}\n¿Deseas que lo refactorice o le agregue pruebas unitarias?`;
+                }
+                return `Aquí tienes el módulo de código estructurado y optimizado:${codeSnippet}`;
+            }
+
+            if (query.includes("hola") || query.includes("saludos")) {
+                if (currentPersonality === 'tecnomante') return "Saludos, invocador. Los hilos del código y las corrientes arcanas responden a tu llamado. ¿En qué trabajaremos hoy?";
+                if (currentPersonality === 'hechicera') return "Bendiciones sobre tu camino. Las velas están encendidas y las estrellas alineadas. Habla.";
+                if (currentPersonality === 'jarvis') return "Sistemas en línea, amo. Matriz de algoritmos a su servicio.";
+                return "¡Hola! Qué gusto saludarte. ¿En qué te puedo colaborar el día de hoy?";
+            }
+
+            if (query.includes("quien eres") || query.includes("quién eres")) {
+                return `Soy ${botName}, una entidad cibernética y mística. Domino la programación full-stack, la depuración y los algoritmos, así como las artes esotéricas de la brujería, el tarot y los rituales.`;
+            }
+
+            if (currentPersonality === 'tecnomante') {
+                return `He decodificado tu mensaje sobre "${query}". Combino la precisión del código con la intuición arcana. ¿Quieres que redactemos un script, hagamos una consulta mística o creemos arte visual?`;
+            } else if (currentPersonality === 'hechicera') {
+                return `El eco de tu pregunta "${query}" resuena en la matriz mística. Los símbolos apuntan a que transformes tu intención en acción.`;
+            } else {
+                return `Entendido perfectamente sobre "${query}". Dime si necesitas código, una consulta o que cree una imagen o video para ti.`;
+            }
+        }
+
+        /* 7. MEDIA GENERATION STUDIO */
+        function triggerImageGeneration(prompt) {
+            const current = getActiveChat();
+            current.messages.push({ sender: 'hecate', text: `Creando la imagen mística basada en tu idea: "${prompt}". Canalizando energía visual...` });
+            renderActiveChat();
+            speak("Generando tu imagen.");
+
+            setTimeout(() => {
+                const encodedPrompt = encodeURIComponent(prompt);
+                const generatedImgUrl = `https://pollinations.ai/p/${encodedPrompt}?width=800&height=600&seed=${Math.floor(Math.random()*1000)}`;
+                
+                current.messages.push({
+                    sender: 'hecate',
+                    text: `IMAGEN MANIFESTADA // Prompt: ${prompt}`,
+                    imgSrc: generatedImgUrl
+                });
+                if (!isIncognito) saveChatsToStorage();
+                renderActiveChat();
+
+                addToGallery('image', generatedImgUrl, prompt);
+                speak("¡Tu imagen ha sido completada!");
+            }, 2000);
+        }
+
+        function triggerVideoGeneration(prompt) {
+            const current = getActiveChat();
+            current.messages.push({ sender: 'hecate', text: `Renderizando la secuencia cinemática para: "${prompt}". Procesando frames...` });
+            renderActiveChat();
+            speak("Generando tu video.");
+
+            setTimeout(() => {
+                const dummyVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4";
+                current.messages.push({
+                    sender: 'hecate',
+                    text: `VIDEO RENDERIZADO // Prompt: ${prompt}\n[Secuencia Multimedia Lista]`
+                });
+                if (!isIncognito) saveChatsToStorage();
+                renderActiveChat();
+
+                addToGallery('video', dummyVideoUrl, prompt);
+                speak("¡El video ha sido completado y está listo para ser reproducido!");
+            }, 2500);
+        }
+
+        function generateStudioContent(type) {
+            if (type === 'image') {
+                const prompt = document.getElementById('studioImgPrompt').value.trim();
+                if (!prompt) return alert("Escribe una descripción para la imagen.");
+                switchTab('chat');
+                triggerImageGeneration(prompt);
+            } else {
+                const prompt = document.getElementById('studioVidPrompt').value.trim();
+                if (!prompt) return alert("Escribe una descripción para el video.");
+                switchTab('chat');
+                triggerVideoGeneration(prompt);
+            }
+        }
+
+        function addToGallery(type, url, prompt) {
+            const gallery = document.getElementById('studioGallery');
+            if (gallery.innerText.includes("Tus creaciones")) gallery.innerHTML = '';
+
+            const item = document.createElement('div');
+            item.className = "hud-panel p-2 rounded border border-hecate-purple/40 flex flex-col gap-1";
+
+            if (type === 'image') {
+                item.innerHTML = `
+                    <img src="${url}" class="h-24 w-full object-cover rounded border border-hecate-neon" alt="Preview">
+                    <span class="text-[10px] font-mono text-hecate-light truncate">${escapeHTML(prompt)}</span>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div class="h-24 w-full bg-black/80 rounded border border-hecate-neon flex items-center justify-center text-hecate-neon">
+                        <i class="fa-solid fa-circle-play text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-mono text-hecate-light truncate">${escapeHTML(prompt)}</span>
+                `;
+            }
+            gallery.prepend(item);
+        }
+
+        function appendMessageElement(sender, text, imgSrc = null) {
+            const container = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex gap-3 items-start";
+
+            let formattedText = escapeHTML(text);
+            
+            if (formattedText.includes('```')) {
+                formattedText = formattedText.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                    return `<pre><code>${code}</code></pre>`;
+                });
+            }
+
+            let imageHtml = imgSrc ? `<img src="${imgSrc}" class="mt-2 rounded-lg border border-hecate-neon max-h-48 object-cover shadow-neon-purple">` : '';
+
+            if (sender === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="ml-auto bg-hecate-purple/30 border border-hecate-neon/60 rounded-lg p-3 max-w-[85%] text-slate-100 shadow-md">
+                        <div class="font-orbitron text-[10px] text-hecate-light font-bold mb-1 text-right">TÚ</div>
+                        <div class="font-rajdhani text-base">${formattedText}</div>
+                        ${imageHtml}
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-hecate-purple/30 border border-hecate-neon flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-robot text-hecate-neon text-xs"></i>
+                    </div>
+                    <div class="bg-hecate-card/80 border border-hecate-purple/40 rounded-lg p-3 max-w-[85%] shadow-md">
+                        <div class="font-orbitron text-xs text-hecate-neon font-bold mb-1">${botName.toUpperCase()}</div>
+                        <div class="text-slate-200 font-rajdhani text-base">${formattedText}</div>
+                        ${imageHtml}
+                    </div>
+                `;
+            }
+
+            container.appendChild(msgDiv);
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        /* 8. PERSONALITY SETTINGS */
+        function togglePersonalityModal() {
+            const modal = document.getElementById('personalityModal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        function updatePersonalityTone() {
+            currentPersonality = document.getElementById('personalityToneSelect').value;
+            const badge = document.getElementById('personalityBadge');
+            if (currentPersonality === 'tecnomante') badge.textContent = "Tecnomante";
+            else if (currentPersonality === 'hechicera') badge.textContent = "Hechicera";
+            else if (currentPersonality === 'jarvis') badge.textContent = "Jarvis HUD";
+            else badge.textContent = "Humana";
+        }
+
+        function savePersonalitySettings() {
+            botName = document.getElementById('botNameInput').value.trim() || 'Hécate S.I.';
+            updatePersonalityTone();
+            togglePersonalityModal();
+            speak(`Ajustes actualizados. Sintonizada en modo ${currentPersonality}.`);
+        }
+
+        /* 9. NAVIGATION & LAUNCHER */
+        function switchTab(tab) {
+            const chatTab = document.getElementById('tabChat');
+            const studioTab = document.getElementById('tabStudio');
+            const launcherTab = document.getElementById('tabLauncher');
+
+            const chatBtn = document.getElementById('tabChatBtn');
+            const studioBtn = document.getElementById('tabGenBtn');
+            const launcherBtn = document.getElementById('tabLauncherBtn');
+
+            chatTab.classList.add('hidden');
+            studioTab.classList.add('hidden');
+            launcherTab.classList.add('hidden');
+
+            chatBtn.className = "px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2";
+            studioBtn.className = "px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2";
+            launcherBtn.className = "px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-hecate-light bg-black/40 rounded-t-lg transition flex items-center gap-2";
+
+            if (tab === 'chat') {
+                chatTab.classList.remove('hidden');
+                chatBtn.className = "px-4 py-2.5 border-b-2 border-hecate-neon text-white font-bold bg-hecate-purple/20 rounded-t-lg transition flex items-center gap-2";
+            } else if (tab === 'studio') {
+                studioTab.classList.remove('hidden');
+                studioBtn.className = "px-4 py-2.5 border-b-2 border-hecate-neon text-white font-bold bg-hecate-purple/20 rounded-t-lg transition flex items-center gap-2";
+            } else {
+                launcherTab.classList.remove('hidden');
+                launcherBtn.className = "px-4 py-2.5 border-b-2 border-hecate-neon text-white font-bold bg-hecate-purple/20 rounded-t-lg transition flex items-center gap-2";
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarContainer');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function launchApp(url, title) {
+            activeIframeUrl = url;
+            document.getElementById('webModalTitle').textContent = title;
+            document.getElementById('webIframe').src = url;
+            document.getElementById('webModal').classList.remove('hidden');
+            document.getElementById('webModal').classList.add('flex');
+        }
+
+        function closeWebModal() {
+            document.getElementById('webModal').classList.add('hidden');
+            document.getElementById('webModal').classList.remove('flex');
+            document.getElementById('webIframe').src = 'about:blank';
+        }
+
+        function openExternalBrowser() {
+            if (activeIframeUrl) window.open(activeIframeUrl, '_blank');
+        }
+
+        function navigateDirectUrl(e) {
+            e.preventDefault();
+            let input = document.getElementById('directUrlInput').value.trim();
+            if (!input) return;
+            if (!input.startsWith('http://') && !input.startsWith('https://')) {
+                input = input.includes('.') ? 'https://' + input : 'https://www.google.com/search?q=' + encodeURIComponent(input);
+            }
+            launchApp(input, 'Navegador');
+        }
+
+        function addCustomShortcut() {
+            const name = prompt("Nombre de la App o sitio:");
+            let url = prompt("Dirección URL:");
+            if (name && url) {
+                if (!url.startsWith('http')) url = 'https://' + url;
+                const grid = document.getElementById('appGrid');
+                const card = document.createElement('div');
+                card.className = "hud-panel p-3 rounded-lg hover:border-hecate-neon cursor-pointer transition flex flex-col items-center text-center group";
+                card.onclick = () => launchApp(url, name);
+                card.innerHTML = `
+                    <i class="fa-solid fa-link text-3xl text-hecate-neon mb-2 group-hover:scale-110 transition"></i>
+                    <span class="font-orbitron text-xs text-white">${escapeHTML(name)}</span>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        /* 10. PWA GENERATOR & INSTALLER */
+        function generatePWAIcon() {
+            const canvas = document.getElementById('iconCanvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#05010a';
+            ctx.fillRect(0, 0, 128, 128);
+
+            ctx.strokeStyle = '#bc13fe';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(64, 64, 52, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 52px Orbitron, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#bc13fe';
+            ctx.shadowBlur = 15;
+            ctx.fillText('H', 64, 66);
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt = null;
+            } else {
+                alert('Para instalar Hécate S.I., abre el menú de tu navegador y pulsa "Añadir a la pantalla de inicio".');
+            }
+        }
+
+        function togglePwaModal() {
+            const modal = document.getElementById('pwaModal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+    </script>
+</body>
+</html>
